@@ -63,8 +63,8 @@ class BONEBREAKER_OT_AddFeature(bpy.types.Operator):
 
 		#self.report({'INFO'}, 'Info message download the additional addon to enable this feature!')
 		return {'FINISHED'}
-	
-		
+
+
 class BONEBREAKER_OT_FBXimportUE4(bpy.types.Operator):
 	"""Import an FBX file using suggested settings for Unreal"""
 	bl_idname = "bonebreaker.fbximportue4"
@@ -76,7 +76,7 @@ class BONEBREAKER_OT_FBXimportUE4(bpy.types.Operator):
 	@classmethod
 	def poll(cls, context):
 		return bpy.data.objects.get("root") is None
-		
+
 	#Modal wokaround.
 	def modal(self, context, event):
 		#check if the objects on screen have changed.
@@ -100,7 +100,7 @@ class BONEBREAKER_OT_FBXimportUE4(bpy.types.Operator):
 		else:
 			#objects haven't changed, import can't be done.
 			self.currentobjects = len(bpy.data.objects)
-			return {'PASS_THROUGH'}	
+			return {'PASS_THROUGH'}
 	def invoke(self, context, event):
 		#override system unit scale
 		context.scene.unit_settings.scale_length=.01
@@ -126,7 +126,7 @@ class BONEBREAKER_OT_FBXimport(bpy.types.Operator):
 	@classmethod
 	def poll(cls, context):
 		return bpy.data.objects.get("root") is None
-		
+
 	#Modal wokaround.
 	def modal(self, context, event):
 		#check if the objects on screen have changed.
@@ -150,7 +150,7 @@ class BONEBREAKER_OT_FBXimport(bpy.types.Operator):
 		else:
 			#objects haven't changed, import can't be done.
 			self.currentobjects = len(bpy.data.objects)
-			return {'PASS_THROUGH'}	
+			return {'PASS_THROUGH'}
 	def invoke(self, context, event):
 		#override system unit scale
 		context.scene.unit_settings.scale_length=.01
@@ -163,16 +163,16 @@ class BONEBREAKER_OT_FBXimport(bpy.types.Operator):
 		#set up the modal
 		context.window_manager.modal_handler_add(self)
 		return {'RUNNING_MODAL'}
-		
+
 class BONEBREAKER_OT_exportmannequin(bpy.types.Operator):
 	"""Export the final animation in an automated process"""
 	bl_idname = "bonebreaker.exportmannequin"
 	bl_label = "Export the final animation in an automated process."
-		
+
 	@classmethod
 	def poll(cls, context):
 		return bpy.context.window.view_layer.layer_collection.children.get('UE4') is not None and bpy.context.window.view_layer.layer_collection.children.get('Collection') is not None
-		
+
 	def execute(self, context):
 		bpy.ops.bonebreaker.follownone()
 		#select none at all.
@@ -217,13 +217,13 @@ class BONEBREAKER_OT_FBXexport(bpy.types.Operator):
 	"""Export the an FBX file with the unreal settings"""
 	bl_idname = "bonebreaker.fbxexport"
 	bl_label = "Export selected object to FBX."
-	
+
 	type: bpy.props.StringProperty(default = "Null")
 	@classmethod
 	def poll(cls, context):
 		if len(bpy.data.objects) >= 1:
 			return True
-		
+
 	def execute(self, context):
 		#Run the export.
 		if hasattr(bpy.types, "UE4FBX_OT_exportfbx") is not False:
@@ -265,7 +265,7 @@ class BONEBREAKER_OT_FBXexport(bpy.types.Operator):
 				add_leaf_bones=False,
 				primary_bone_axis='Y', secondary_bone_axis='X')
 		return {'FINISHED'}
-		
+
 class BONEBREAKER_OT_all(bpy.types.Operator):
 	"""Create a metarig if one does not exist.
 form the rigify rig based on the metarig"""
@@ -284,22 +284,23 @@ form the rigify rig based on the metarig"""
 		BoneBreaker.IK_bones_follow(rig)
 		rig_id = rig.data['rig_id']
 		#Toggle Pole Rotation isntead of default setting.
-		rigify_function = "rigify_limb_toggle_pole_"
-		rigify_function = rigify_function+bpy.data.objects['rig'].data['rig_id']
-		eval("bpy.ops.pose."+rigify_function+'(prop_bone="upper_arm_parent.L", pole_prop="pole_vector", fk_bones=\'[""]\', ik_bones=\'["upper_arm_ik.L", "MCH-forearm_ik.L", "MCH-upper_arm_ik_target.L"]\', ctrl_bones=\'["upper_arm_ik.L", "hand_ik.L", "upper_arm_ik_target.L"]\', extra_ctrls=\'[""]\', use_pole=True)')
-		eval("bpy.ops.pose."+rigify_function+'(prop_bone="upper_arm_parent.R", pole_prop="pole_vector", fk_bones=\'[""]\', ik_bones=\'["upper_arm_ik.R", "MCH-forearm_ik.R", "MCH-upper_arm_ik_target.R"]\', ctrl_bones=\'["upper_arm_ik.R", "hand_ik.R", "upper_arm_ik_target.R"]\', extra_ctrls=\'[""]\', use_pole=True)')
-		eval("bpy.ops.pose."+rigify_function+'(prop_bone="thigh_parent.R", pole_prop="pole_vector", fk_bones=\'[""]\', ik_bones=\'["thigh_ik.R", "MCH-shin_ik.R", "MCH-thigh_ik_target.R"]\', ctrl_bones=\'["thigh_ik.R", "foot_ik.R", "thigh_ik_target.R"]\', extra_ctrls=\'[""]\', use_pole=True)')
-		eval("bpy.ops.pose."+rigify_function+'(prop_bone="thigh_parent.L", pole_prop="pole_vector", fk_bones=\'[""]\', ik_bones=\'["thigh_ik.L", "MCH-shin_ik.L", "MCH-thigh_ik_target.L"]\', ctrl_bones=\'["thigh_ik.L", "foot_ik.L", "thigh_ik_target.L"]\', extra_ctrls=\'[""]\', use_pole=True)')
-		print('Rigify Function Name', rigify_function)
+		if bpy.ops.object.mode_set.poll():
+			bpy.ops.object.mode_set(mode='POSE')
+		pose_bones = bpy.data.objects['rig'].pose.bones
+		limb_parents = ["upper_arm_parent.L", "upper_arm_parent.R", "thigh_parent.L", "thigh_parent.R"]
+		for bone_name in limb_parents:
+			bone = pose_bones.get(bone_name)
+			if bone:
+				if "pole_vector" in bone:
+					bone["pole_vector"] = True
+		bpy.context.view_layer.update()
         #Hide rig's needless FK/Tweak.
-		bpy.context.object.data.layers[8] = False
-		bpy.context.object.data.layers[9] = False
-		bpy.context.object.data.layers[11] = False
-		bpy.context.object.data.layers[12] = False
-		bpy.context.object.data.layers[14] = False
-		bpy.context.object.data.layers[15] = False
-		bpy.context.object.data.layers[17] = False
-		bpy.context.object.data.layers[18] = False
+		arm_data = bpy.context.object.data
+		for old_index in [8,9,11,12,14,15,17,18]:
+			collection_name = f"Layer {old_index + 1}"
+			coll = arm_data.collections.get(collection_name)
+			if coll:
+				coll.hide_viewport = True
 		return {'FINISHED'}
 
 class BONEBREAKER_OT_metarig(bpy.types.Operator):
@@ -309,7 +310,7 @@ class BONEBREAKER_OT_metarig(bpy.types.Operator):
 	@classmethod
 	def poll(cls, context):
 		return bpy.data.objects.get("root") is not None
-			 
+
 	def execute(self, context):
 		if bpy.data.objects.get("metarig") is not None:
 			#Deselect all
@@ -320,7 +321,7 @@ class BONEBREAKER_OT_metarig(bpy.types.Operator):
 			bpy.ops.object.delete()
 			#Deselect all agian.
 			bpy.ops.object.select_all(action='DESELECT')
-		
+
 		if bpy.data.objects.get("root") is not None and bpy.data.objects.get("metarig") is None:
 			#create our metarig and make our rigify rig! booya.
 			BoneBreaker.metaBlending2(bpy.data.objects["root"])
@@ -343,7 +344,15 @@ class BONEBREAKER_OT_rigify(bpy.types.Operator):
 			#try obj mode
 			BoneBreaker.setObj()
 			#object Select
-			bpy.data.objects['rig'].select_set(True)
+			rig_obj = bpy.data.objects.get("rig")
+			if rig_obj is not None:
+				if rig_obj.name not in bpy.context.view_layer.objects:
+					bpy.context.scene.collection.objects.link(rig_obj)
+				BoneBreaker.setObj()
+				rig_obj.hide_set(False)
+				bpy.context.view_layer.objects.active = rig_obj
+				rig_obj.select_set(True)
+				bpy.context.view_layer.update()
 			#remove object
 			bpy.ops.object.delete()
 			#Deselect all agian.
@@ -361,13 +370,17 @@ class BONEBREAKER_OT_rigify(bpy.types.Operator):
 			bpy.context.window.view_layer.layer_collection.children["Metarig"].exclude = True
 			bpy.ops.pose.rigify_generate()
 			#hide not needed bone layers.
-			bpy.context.object.data.layers[0] = False
-			bpy.context.object.data.layers[1] = False
-			bpy.context.object.data.layers[2] = False
+			arm_data = bpy.context.object.data
+			for old_index in [0, 1, 2]:
+				collection_name = f"Layer {old_index + 1}"
+				coll = arm_data.collections.get(collection_name)
+				if coll:
+					coll.hide_viewport = True
 			#deselect the metarig.
 			metarig.select_set(False)
 			#remove layer
-			bpy.context.scene.collection.children['Collection'].objects.unlink(metarig)
+			if (bpy.context.scene.collection.children['Collection'].children.get(metarig.name)) is not None:
+				bpy.context.scene.collection.children['Collection'].objects.unlink(metarig)
 			if bpy.data.objects.get("rig") is not None:
 				BoneBreaker.AdjustRig4UE4(bpy.data.objects.get("rig"))
 				BoneBreaker.AdjustRigSuperFingers(bpy.data.objects.get("rig"))
@@ -377,7 +390,7 @@ class BONEBREAKER_OT_rigify(bpy.types.Operator):
 					ue4.select_set(True)
 					print(ue4.name)
 					BoneBreaker.adjustConstraint(ue4)
-					
+
 					#Create a new collection and link it to the scene.
 					UE4C = bpy.data.collections.new("UE4")
 					bpy.context.scene.collection.children.link(UE4C)
@@ -392,7 +405,7 @@ class BONEBREAKER_OT_rigify(bpy.types.Operator):
 					if bpy.data.objects.get("SK_Mannequin") is not None:
 						mannequin = bpy.data.objects.get("SK_Mannequin")
 						mannequin.hide_select = True
-					#select the rig. go into pose mode. 
+					#select the rig. go into pose mode.
 					rig = bpy.data.objects.get("rig")
 					rig.select_set(True)
 					bpy.context.view_layer.objects.active = rig
@@ -424,7 +437,7 @@ class BONEBREAKER_OT_animall(bpy.types.Operator):
 	"""Perform all the standard animations when importing a UE4 animation"""
 	bl_idname = "bonebreaker.animall"
 	bl_label = "Perform all the standard animations when importing a UE4 animation."
-	
+
 	@classmethod
 	def poll(cls, context):
 		if bpy.data.objects.get("root") is not None:
@@ -444,31 +457,13 @@ class BONEBREAKER_OT_animall(bpy.types.Operator):
 		#Switch pole rotation to key frames.
 		bpy.context.view_layer.objects.active = bpy.data.objects.get("rig")
 		bpy.ops.object.mode_set(mode='POSE')
-		#Show rig's needless FK/Tweak.
-		bpy.context.object.data.layers[8] = True
-		bpy.context.object.data.layers[9] = True
-		bpy.context.object.data.layers[11] = True
-		bpy.context.object.data.layers[12] = True
-		bpy.context.object.data.layers[14] = True
-		bpy.context.object.data.layers[15] = True
-		bpy.context.object.data.layers[17] = True
-		bpy.context.object.data.layers[18] = True
-		#Toggle Pole Rotation isntead of default setting.
-		#rigify_function = "rigify_limb_toggle_pole_"
-		#rigify_function = rigify_function+bpy.data.objects['rig'].data['rig_id']
-		#eval("bpy.ops.pose."+rigify_function+'(prop_bone="upper_arm_parent.L", pole_prop="pole_vector", fk_bones=\'[""]\', ik_bones=\'["upper_arm_ik.L", "MCH-forearm_ik.L", "MCH-upper_arm_ik_target.L"]\', ctrl_bones=\'["upper_arm_ik.L", "hand_ik.L", "upper_arm_ik_target.L"]\', extra_ctrls=\'[""]\', use_pole=False)')
-		#eval("bpy.ops.pose."+rigify_function+'(prop_bone="upper_arm_parent.R", pole_prop="pole_vector", fk_bones=\'[""]\', ik_bones=\'["upper_arm_ik.R", "MCH-forearm_ik.R", "MCH-upper_arm_ik_target.R"]\', ctrl_bones=\'["upper_arm_ik.R", "hand_ik.R", "upper_arm_ik_target.R"]\', extra_ctrls=\'[""]\', use_pole=False)')
-		#eval("bpy.ops.pose."+rigify_function+'(prop_bone="thigh_parent.R", pole_prop="pole_vector", fk_bones=\'[""]\', ik_bones=\'["thigh_ik.R", "MCH-shin_ik.R", "MCH-thigh_ik_target.R"]\', ctrl_bones=\'["thigh_ik.R", "foot_ik.R", "thigh_ik_target.R"]\', extra_ctrls=\'[""]\', use_pole=False)')
-		#eval("bpy.ops.pose."+rigify_function+'(prop_bone="thigh_parent.L", pole_prop="pole_vector", fk_bones=\'[""]\', ik_bones=\'["thigh_ik.L", "MCH-shin_ik.L", "MCH-thigh_ik_target.L"]\', ctrl_bones=\'["thigh_ik.L", "foot_ik.L", "thigh_ik_target.L"]\', extra_ctrls=\'[""]\', use_pole=False)')
-		#Hide rig's needless FK/Tweak.
-		bpy.context.object.data.layers[8] = False
-		bpy.context.object.data.layers[9] = False
-		bpy.context.object.data.layers[11] = False
-		bpy.context.object.data.layers[12] = False
-		bpy.context.object.data.layers[14] = False
-		bpy.context.object.data.layers[15] = False
-		bpy.context.object.data.layers[17] = False
-		bpy.context.object.data.layers[18] = False
+		arm_data = bpy.context.object.data
+		for old_index in [8,9,11,12,14,15,17,18]:
+			collection_name = f"Layer {old_index + 1}"
+			coll = arm_data.collections.get(collection_name)
+			if coll:
+				coll.hide_viewport = False
+				coll.hide_viewport = True
 		#follow the FBX file animation.
 		bpy.ops.bonebreaker.followfbx()
 		#generate all animation frames.
@@ -504,7 +499,7 @@ class BONEBREAKER_OT_animall(bpy.types.Operator):
 		bpy.ops.bonebreaker.follownone()
 		#return to the rig since we keyed everything we can.
 		bpy.ops.bonebreaker.followrig()
-		
+
 		#return to object mode.
 		BoneBreaker.setObj()
 		#Go pose mode - should be layer 1 rig.
@@ -523,7 +518,7 @@ class BONEBREAKER_OT_animall(bpy.types.Operator):
 		#eval("bpy.ops.pose."+rigify_function+'(prop_bone="thigh_parent.L", pole_prop="pole_vector", fk_bones=\'[""]\', ik_bones=\'["thigh_ik.L", "MCH-shin_ik.L", "MCH-thigh_ik_target.L"]\', ctrl_bones=\'["thigh_ik.L", "foot_ik.L", "thigh_ik_target.L"]\', extra_ctrls=\'[""]\', use_pole=True)')
 		#done.
 		print("All set, the anim was keyed, the UE4 skeleton changes were reversed, you can anim and export as normal")
-		
+
 		return {'FINISHED'}
 
 class BONEBREAKER_OT_followfbx(bpy.types.Operator):
@@ -580,6 +575,8 @@ class BONEBREAKER_OT_follownone(bpy.types.Operator):
 	def execute(self, context):
 		BoneBreaker.setObj()
 		if bpy.data.objects.get("root") is not None:
+			#rig = bpy.data.objects.get("rig")
+			#BoneBreaker.fixbendybone(rig)
 			ue4 = bpy.data.objects.get("root")
 			#move to layer 0 to perform operations
 			if bpy.context.scene.collection.children['Collection'].objects.get(ue4.name) is None:
@@ -611,6 +608,7 @@ Also removed unneeded bones from UE4"""
 		print("following the rig")
 		#Remove constraints from Rig
 		rig = bpy.data.objects.get("rig")
+		#BoneBreaker.fixbendybone(rig)
 		rig.select_set(True)
 		context.view_layer.objects.active = rig
 		print("removed constraints from Rig")
@@ -695,7 +693,7 @@ Selects and bakes appropriate bones."""
 		bpy.ops.bonebreaker.followrig()
 		print("done, ready for export")
 		return {'FINISHED'}
-		
+
 class BONEBREAKER_OT_animkey(bpy.types.Operator):
 	"""Key all the selected bones - useful directly on rig or ue4 bones if doing manual keying"""
 	bl_idname = "bonebreaker.animkey"
@@ -716,8 +714,8 @@ class BONEBREAKER_OT_animkey(bpy.types.Operator):
 		else:
 			return False
 		return bpy.context.selected_pose_bones is not None and bpy.context.object.mode == 'POSE'
-		
-		
+
+
 	def execute(self, context):
 		scene = context.scene
 		bpy.ops.nla.bake(
@@ -731,12 +729,12 @@ class BONEBREAKER_OT_animkey(bpy.types.Operator):
 			use_current_action=True,
 			bake_types={'POSE'})
 		return {'FINISHED'}
-		
+
 class BONEBREAKER_OT_addkeyframe(bpy.types.Operator):
 	"""Add an animation keyframe"""
 	bl_idname = "bonebreaker.addkeyframe"
 	bl_label = "Add an animation keyframe"
-	
+
 	@classmethod
 	def poll(cls, context):
 		return bpy.context.selected_pose_bones is not None and bpy.context.object.mode == 'POSE'
@@ -760,7 +758,7 @@ class BONEBREAKER_OT_clearallselected(bpy.types.Operator):
 	"""Remove ALL keyframe entries for selected item"""
 	bl_idname = "bonebreaker.clearallselected"
 	bl_label = "Remove ALL keyframe entries for selected item"
-	
+
 	@classmethod
 	def poll(cls, context):
 		return bpy.context.selected_pose_bones is not None and bpy.context.object.mode == 'POSE'
@@ -810,7 +808,7 @@ class BONEBREAKER_OT_enablenvphysview(bpy.types.Operator):
 	bl_label = "Enable displaying of vector distance based on vertex paint color"
 	bl_description = "Start line drawing operator"
 	bl_options = {'REGISTER'}
-	
+
 	def __init__(self):
 		self.draw_handle = None
 		self.draw_event = None
@@ -963,7 +961,7 @@ class BONEBREAKER_OT_enablenvphysview(bpy.types.Operator):
 					if id <= len(self.vertex_colors):
 						self.vertex_colors[id-1] = v[1]
 		self.batch = batch_for_shader(self.shader, 'LINES', {"pos": self.vertices, "color": self.vertex_colors})
-            
+
 	def find_nearest_vert(self, context, event):
 		""" Technically a good idea, but vert paint changes many more verts then this can detect"""
 		#Base args.
@@ -985,7 +983,7 @@ class BONEBREAKER_OT_enablenvphysview(bpy.types.Operator):
 			if success:
 				return location, normal, face_index
 			else:
-				return None, None, None    
+				return None, None, None
         # cast rays and find the closest object
 		best_length_squared = -1.0
 		for obj, matrix in getObj():
@@ -999,7 +997,7 @@ class BONEBREAKER_OT_enablenvphysview(bpy.types.Operator):
 				length_squared = (hit_world - ray_origin).length_squared
 				if obj is None or length_squared < best_length_squared:
 					best_length_squared = length_squared
-				return closest 
+				return closest
 
 def register():
 	bpy.utils.register_class(BONEBREAKER_OT_AddFeature)

@@ -30,14 +30,13 @@ def setObj():
 	try:
 		bpy.ops.armature.select_all(action='DESELECT')
 		print("Succeeded deselect")
-	except Exception: 
+	except Exception:
 		pass
 	try:
 		bpy.ops.object.mode_set(mode='OBJECT')
 		print("Succeeded obj mode")
-	except Exception: 
+	except Exception:
 		pass
-
 def LayerSet(layer):
     booleans = []
     for i in range(20):
@@ -46,7 +45,34 @@ def LayerSet(layer):
         else:
             booleans.append(False)
     return tuple(booleans)
-	
+def fixbendybone(armature):
+	"Remove bendy bone twist by forcing 1 "
+	if armature and armature.type == 'ARMATURE':
+		original_mode = armature.mode
+		bpy.context.view_layer.objects.active = armature
+		bpy.ops.object.mode_set(mode='EDIT')
+		edit_bones = armature.data.edit_bones
+		for bone in edit_bones:
+			if bone.name.startswith("DEF-"):
+				bone = edit_bones.get(bone.name)
+				if bone:
+					bone.bbone_segments = 1
+		bpy.context.view_layer.update()
+		bpy.ops.object.mode_set(mode='OBJECT')
+		if armature.animation_data and armature.animation_data.drivers:
+			for fcurve in list(armature.animation_data.drivers):
+				data_path = fcurve.data_path
+				if "DEF-" in data_path and ("bbone_ease" in data_path or "bbone_roll" in data_path):
+					armature.animation_data.drivers.remove(fcurve)
+		bpy.context.view_layer.update()
+	if bpy.ops.object.mode_set.poll():
+		bpy.ops.object.mode_set(mode='POSE')
+	bpy.context.view_layer.update()
+	bpy.ops.pose.select_all(action='SELECT')
+	if bpy.ops.object.mode_set.poll():
+		bpy.ops.object.mode_set(mode=original_mode)
+	bpy.context.view_layer.update()
+	print("DEF bones forcefully flattened to 1 segment - removed bendy bone")
 def parentUE4(armature):
 	"Set the parenting of the metarig to the standard UE4 bones"
 	bpy.ops.object.mode_set(mode='EDIT')
@@ -61,7 +87,6 @@ def parentUE4(armature):
 				if armatureSet[0].data.edit_bones[MetarigBoneParent[MetarigUE4Bone.index(bone.name)]] is not False:
 					#set the bone parent.
 					bone.parent = armatureSet[0].data.edit_bones[MetarigBoneParent[MetarigUE4Bone.index(bone.name)]]
-
 def AdjustRigSuperFingers(armature):
 	"Superfingers and hands require a parenting adjustment to function. this is how we get it to comply with the rig."
 	bpy.ops.object.mode_set(mode='EDIT')
@@ -74,11 +99,9 @@ def AdjustRigSuperFingers(armature):
 				if armature.data.edit_bones.get(MetarigBoneParent[MetarigUE4Bone.index(bone.name)]) is not None:
 					#set the bone parent.
 					bone.parent = armature.data.edit_bones[MetarigBoneParent[MetarigUE4Bone.index(bone.name)]]
-
 def selectAllBones(armature, state=True):
 	for bone in armature.data.bones:
 		bone.select = state
-
 def selectUE4Bones(armature):
 	"Select all of the UE4 Bones"
 	bpy.ops.object.mode_set(mode='EDIT')
@@ -87,17 +110,19 @@ def selectUE4Bones(armature):
 	for bone in armature.data.edit_bones:
 		if bone.name in RigModifiedUE4Bones is not False:
 			bone.select=True
-
 def AdjustRig4UE4(armature):
 	"loop though the rig and move the UE4 bones to the appropriate layer so they can easily be found."
 	bpy.ops.object.mode_set(mode='EDIT')
-	RigModifiedUE4Bones=["ORG-spine_02","ORG-neck_01","ORG-head","ORG-spine_03","ORG-lowerarm_l","ORG-lowerarm_twist_01_l","ORG-index_01_l","ORG-index_03_l","ORG-index_02_l","ORG-thumb_03_l","ORG-thumb_02_l","ORG-thumb_01_l","ORG-hand_l","ORG-middle_01_l","ORG-middle_03_l","ORG-middle_02_l","ORG-ring_01_l","ORG-ring_03_l","ORG-ring_02_l","ORG-pinky_03_l","ORG-pinky_02_l","ORG-pinky_01_l","ORG-upperarm_l","ORG-upperarm_twist_01_l","ORG-lowerarm_r","ORG-lowerarm_twist_01_r","ORG-index_01_r","ORG-index_03_r","ORG-index_02_r","ORG-thumb_03_r","ORG-thumb_02_r","ORG-thumb_01_r","ORG-hand_r","ORG-middle_03_r","ORG-middle_02_r","ORG-middle_01_r","ORG-ring_03_r","ORG-ring_02_r","ORG-ring_01_r","ORG-pinky_03_r","ORG-pinky_02_r","ORG-pinky_01_r","ORG-upperarm_r","ORG-upperarm_twist_01_r","ORG-clavicle_l","ORG-clavicle_r","ORG-pelvis","ORG-thigh_l","ORG-thigh_twist_01_l","ORG-calf_l","ORG-calf_twist_01_l","ORG-foot_l","ORG-ball_l","ORG-thigh_r","ORG-thigh_twist_01_r","ORG-calf_r","ORG-calf_twist_01_r","ORG-foot_r","ORG-ball_r","ORG-spine_01","ORG-ik_hand_l","ORG-ik_hand_r","ORG-ik_hand_gun","ORG-ik_foot_l","ORG-ik_foot_r","ORG-ik_foot_root","ORG-ik_hand_root"]
+	RigModifiedUE4Bones=["ORG-spine_02","ORG-neck_01","ORG-head","ORG-spine_03","ORG-lowerarm_l","ORG-lowerarm_twist_01_l","ORG-index_01_l","ORG-index_03_l","ORG-index_02_l","ORG-thumb_03_l","ORG-thumb_02_l","ORG-thumb_01_l","ORG-hand_l","ORG-middle_01_l","ORG-middle_03_l","ORG-middle_02_l","ORG-ring_01_l","ORG-ring_03_l","ORG-ring_02_l","ORG-pinky_03_l","ORG-pinky_02_l","ORG-pinky_01_l","ORG-upperarm_l","ORG-upperarm_twist_01_l","ORG-lowerarm_r","MCG-lowerarm_twist_01_r","ORG-index_01_r","ORG-index_03_r","ORG-index_02_r","ORG-thumb_03_r","ORG-thumb_02_r","ORG-thumb_01_r","ORG-hand_r","ORG-middle_03_r","ORG-middle_02_r","ORG-middle_01_r","ORG-ring_03_r","ORG-ring_02_r","ORG-ring_01_r","ORG-pinky_03_r","ORG-pinky_02_r","ORG-pinky_01_r","ORG-upperarm_r","ORG-upperarm_twist_01_r","ORG-clavicle_l","ORG-clavicle_r","ORG-pelvis","ORG-thigh_l","ORG-thigh_twist_01_l","ORG-calf_l","ORG-calf_twist_01_l","ORG-foot_l","ORG-ball_l","ORG-thigh_r","ORG-thigh_twist_01_r","ORG-calf_r","ORG-calf_twist_01_r","ORG-foot_r","ORG-ball_r","ORG-spine_01","ORG-ik_hand_l","ORG-ik_hand_r","ORG-ik_hand_gun","ORG-ik_foot_l","ORG-ik_foot_r","ORG-ik_foot_root","ORG-ik_hand_root"]
+	layer_32_coll = armature.data.collections.get("Layer 32")
+	layer_25_coll = armature.data.collections.get("Layer 25")
 	for bone in armature.data.edit_bones:
-		if bone.name in RigModifiedUE4Bones is not False:
-			bone.layers[31] = False
-			bone.layers[24] = True
-
-def clearConstraint(armature): 
+		if bone.name in RigModifiedUE4Bones:
+			if layer_32_coll:
+				layer_32_coll.unassign(bone)
+			if layer_25_coll:
+				layer_25_coll.assign(bone)
+def clearConstraint(armature):
 	"""Adjust the bones of the armature by remove all constraints and adding in the copy transform"""
 	if armature is not None:
 		bpy.context.view_layer.objects.active = armature
@@ -120,7 +145,6 @@ def clearConstraint(armature):
 				for c in bone.constraints:
 					bone.constraints.remove( c )
 		bpy.ops.object.mode_set(mode='OBJECT')
-
 def IK_bones_follow(armature):
 	""" Reset the IK bones within the rig so they follow the correct parents with copy transforms"""
 	IKBones=["ORG-ik_hand_l","ORG-ik_hand_r","ORG-ik_hand_gun","ORG-ik_foot_l","ORG-ik_foot_r","ORG-ik_foot_root","ORG-ik_hand_root"]
@@ -138,7 +162,10 @@ def IK_bones_follow(armature):
 					for c in bone.constraints:
 						bone.constraints.remove( c )
 					constraint = bone.constraints.new('COPY_TRANSFORMS')
-					constraint.target = bpy.context.scene.collection.children['Collection'].objects["rig"]
+					if (bpy.context.scene.collection.children['Collection'].objects.get("rig")) is not None:
+						constraint.target = bpy.context.scene.collection.children['Collection'].objects["rig"]
+					else:
+						print("Error. Hierarchy issue: Unable to find 'Rig' within Collection")
 					constraint.subtarget = RigBoneParent[id]
 	#All done.
 def addrigconstraint(armature):
@@ -154,7 +181,10 @@ def addrigconstraint(armature):
             for c in boneA.constraints:
                 boneA.constraints.remove( c )
             constraint = boneA.constraints.new('COPY_TRANSFORMS')
-            constraint.target = bpy.context.scene.collection.children['Collection'].objects["rig"]
+            if (bpy.context.scene.collection.children['Collection'].objects.get("rig")) is not None:
+            	constraint.target = bpy.context.scene.collection.children['Collection'].objects["rig"]
+            else:
+            	print("Error. Hierarchy issue: Unable to find 'Rig' within Collection")
             constraint.subtarget = "ORG-" + bone
 def remrigconstraint(armature):
     """Remove the constraints on the base rig."""
@@ -171,6 +201,9 @@ def remrigconstraint(armature):
 def adjustConstraint(armature):
 	"""Adjust the bones of the armature by remove all constraints and add in the copy transform"""
 	if armature.name=="root":
+		#bug fix metarig: twist bones now all need special attention because of the bendy bone shit.
+		TwistBones=["ORG-lowerarm_twist_01_l","ORG-lowerarm_twist_01_r","ORG-thigh_twist_01_l","ORG-calf_twist_01_l","ORG-thigh_twist_01_r","ORG-calf_twist_01_r"]
+		TwistBoneTargets=["MCH-forearm_tweak.L.001","MCH-forearm_tweak.R.001","MCH-thigh_tweak.L.001","MCH-shin_tweak.L.001","MCH-thigh_tweak.R.001","MCH-shin_tweak.R.001"]
 		#deselect all.
 		for ob in bpy.context.scene.collection.children['Collection'].objects: ob.select_set(False)
 		#select active armature.
@@ -181,20 +214,37 @@ def adjustConstraint(armature):
 		for bone in bpy.context.selected_pose_bones:
 			for c in bone.constraints:
 				bone.constraints.remove( c )
-			if bpy.context.scene.collection.children['Collection'].objects["rig"].data.bones.get("ORG-"+bone.name) is not None:
-				constraint = bone.constraints.new('COPY_ROTATION')
-				constraint.target = bpy.context.scene.collection.children['Collection'].objects["rig"]
-				constraint.subtarget = "ORG-"+bone.name
-				constraint = bone.constraints.new('COPY_LOCATION')
-				constraint.target = bpy.context.scene.collection.children['Collection'].objects["rig"]
-				constraint.subtarget = "ORG-"+bone.name
+			if (bpy.context.scene.collection.children['Collection'].objects.get("rig")) is not None:
+				if bpy.context.scene.collection.children['Collection'].objects["rig"].data.bones.get("ORG-"+bone.name) is not None:
+					if "ORG-"+bone.name not in TwistBones:
+						constraint = bone.constraints.new('COPY_ROTATION')
+						constraint.target = bpy.context.scene.collection.children['Collection'].objects["rig"]
+						constraint.subtarget = "ORG-"+bone.name
+						constraint = bone.constraints.new('COPY_LOCATION')
+						constraint.target = bpy.context.scene.collection.children['Collection'].objects["rig"]
+						constraint.subtarget = "ORG-"+bone.name
+					else:
+						index = TwistBones.index("ORG-"+bone.name)
+						constraint = bone.constraints.new('COPY_ROTATION')
+						constraint.target = bpy.context.scene.collection.children['Collection'].objects["rig"]
+						if TwistBoneTargets[index]!="" :
+							constraint.subtarget = TwistBoneTargets[index]
+						constraint.target_space = 'LOCAL_OWNER_ORIENT'
+						constraint.owner_space = 'LOCAL'
+						constraint = bone.constraints.new('COPY_LOCATION')
+						constraint.target = bpy.context.scene.collection.children['Collection'].objects["rig"]
+						if TwistBoneTargets[index]!="" :
+							constraint.subtarget = TwistBoneTargets[index]
+						constraint.target_space = 'LOCAL_OWNER_ORIENT'
+						constraint.owner_space = 'LOCAL'
+			else:
+				print("Collection did not contain Metarig. You messed with the file structure somehow.")
 		bpy.ops.object.mode_set(mode='OBJECT')
 		#not sure what this was...
 		#armature.layers[0] = False
 	else:
 		print("Could not find UE4 Mannequin to associate")
 	#Remove extra UE4 Bones if they exist. the anim was cut and made to follow they need to be removed for export.
-	
 def removeRigConstraint(armature):
     bonesFollow=["ORG-spine_Follow","ORG-spine.001_Follow","ORG-spine.002_Follow","ORG-spine.003_Follow","ORG-spine.005_Follow","ORG-spine.006_Follow","ORG-thigh.L_Follow","ORG-shin.L_Follow","ORG-foot.L_Follow","ORG-thigh.R_Follow","ORG-shin.R_Follow","ORG-foot.R_Follow","ORG-shoulder.L_Follow","ORG-upper_arm.L_Follow","ORG-forearm.L_Follow","ORG-shoulder.R_Follow","ORG-upper_arm.R_Follow","ORG-forearm.R_Follow","ORG-hand.L_Follow","ORG-hand.R_Follow","ORG-toe.L_Follow","ORG-toe.R_Follow"]
     for index, bonename in enumerate(bonesFollow):
@@ -227,16 +277,21 @@ def adjustConstraintReverse(armature):
             for c in bone.constraints:
                 bone.constraints.remove( c )
             constraint = bone.constraints.new('COPY_TRANSFORMS')
-            constraint.target = bpy.context.scene.collection.children['Collection'].objects["root"]
+            if (bpy.context.scene.collection.children['Collection'].objects.get("root")) is not None:
+                constraint.target = bpy.context.scene.collection.children['Collection'].objects["root"]
+            else:
+                print("Error. Hierarchy issue: Unable to find 'root' within Collection")
             constraint.subtarget = bonesRig[index]
     for index, bonename in enumerate(bonesOrg):
         if armature.pose.bones.get(bonename) is not None:
             bone = armature.pose.bones.get(bonename)
             constraint = bone.constraints.new('COPY_TRANSFORMS')
-            constraint.target = bpy.context.scene.collection.children['Collection'].objects["rig"]
+            if (bpy.context.scene.collection.children['Collection'].objects.get("rig")) is not None:
+                constraint.target = bpy.context.scene.collection.children['Collection'].objects["rig"]
+            else:
+                print("Error. Hierarchy issue: Unable to find 'Rig' within Collection")
             constraint.subtarget = bonesFollow[index]
     print("the armor was reverse rigged")
-    
 def getConstraintInfo(armature):
 	RigIKBones=["foot_ik.L","foot_heel_ik.L","thigh_ik_target.L","thigh_ik.L","foot_ik.R","foot_heel_ik.R","thigh_ik_target.R","thigh_ik.R","hand_ik.L","upper_arm_ik_target.L","upper_arm_ik.L","hand_ik.R","upper_arm_ik_target.R","upper_arm_ik.R","torso","hips","chest","shoulder.L","shoulder.R","neck","head"]
 	bpy.ops.object.mode_set(mode='POSE')
@@ -256,22 +311,28 @@ def rigRootAdd(armature,rig):
     for index, bone in enumerate(RigIKBones):
         if armature.data.edit_bones.get(bone) is not None:
             #This bone exists. we need to create an alias.
-            if rig.data.edit_bones.get(bone) is not None:
-                oldbone = rig.data.edit_bones.get(bone)
-                newbone = armature.data.edit_bones.new(oldbone.name + "_Follow")
-                newbone.roll = oldbone.roll
-                newbone.tail = oldbone.tail
-                newbone.head = oldbone.head
+            if (oldbone := rig.data.edit_bones.get(bone)) is not None:
+                bone_name = old_bone_obj.name
+                bone_roll = old_bone_obj.roll
+                bone_head = old_bone_obj.head.copy()
+                bone_tail = old_bone_obj.tail.copy()
+                newbone = armature.data.edit_bones.new(bone_name + "_Follow")
+                newbone.roll = bone_roll
+                newbone.tail = bone_tail
+                newbone.head = bone_head
                 newbone.use_connect = False
-                Adjust.append(oldbone.name)
+                Adjust.append(bone_name)
         else:
             #print(bone, "needs creation");
-            if rig.data.edit_bones.get(bone) is not None:
-                oldbone = rig.data.edit_bones.get(bone)
-                newbone = armature.data.edit_bones.new(oldbone.name)
-                newbone.roll = oldbone.roll
-                newbone.tail = oldbone.tail
-                newbone.head = oldbone.head
+            if (oldbone := rig.data.edit_bones.get(bone)) is not None:
+                bone_name = old_bone_obj.name
+                bone_roll = old_bone_obj.roll
+                bone_head = old_bone_obj.head.copy()
+                bone_tail = old_bone_obj.tail.copy()
+                newbone = armature.data.edit_bones.new(bone_name)
+                newbone.roll = bone_roll
+                newbone.tail = bone_tail
+                newbone.head = bone_head
                 newbone.use_connect = False
                 if armature.data.edit_bones.get(RigParents[index]) is not None:
                     parent = armature.data.edit_bones.get(RigParents[index])
@@ -372,7 +433,7 @@ def deleteUE4rigBones(armature):
 	else:
 		print("Surely you did not wish to call the removal script on an armature that isn't the UE4 one...")
 def copy_loc(armature):
-	""" Force the tight twist to follow the IK / Not use Poles """
+	""" Force the thigh twist to follow the IK / Not use Poles """
 	IKBones=["thigh_ik.R","thigh_ik.L"]
 	RigBoneParent=["MCH-thigh_ik_stretch.R","MCH-thigh_ik_stretch.L"]
 	if armature.name=="rig":
@@ -407,10 +468,12 @@ def metaBlending2(armature,metarig = None):
 	DoubleHelixReverseP=["spine_Follow","spine.001_Follow","spine.002_Follow","spine.003_Follow","spine.005_Follow","spine.006_Follow","thigh.L_Follow","shin.L_Follow","foot.L_Follow","thigh.R_Follow","shin.R_Follow","foot.R_Follow","shoulder.L_Follow","upper_arm.L_Follow","forearm.L_Follow","shoulder.R_Follow","upper_arm.R_Follow","forearm.R_Follow","hand.L_Follow","hand.R_Follow","toe.L_Follow","toe.R_Follow"]
 	if metarig is None:
 		setObj()
+		bpy.context.view_layer.update()
 		bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
 		bpy.ops.object.armature_human_metarig_add()
 		bpy.ops.transform.resize(value=(91, 91, 91))
 		bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+		bpy.context.view_layer.update()
 		metarig = bpy.context.view_layer.objects.active
 	#re-check metarig/armature existence
 	if armature is not None and armature.name.startswith("root") is not True:
@@ -426,7 +489,10 @@ def metaBlending2(armature,metarig = None):
 		bpy.context.view_layer.objects.active = armature
 		bpy.ops.object.mode_set(mode='EDIT')
 		if armature.data.edit_bones.get(UE4Bone) is not None:
-			tmp = armature.matrix_world @ armature.data.edit_bones.get(UE4Bone).head
+			bpy.context.view_layer.update()
+			depsgraph = bpy.context.evaluated_depsgraph_get()
+			true_matrix_world = armature.evaluated_get(depsgraph).matrix_world
+			tmp = true_matrix_world @ armature.data.edit_bones.get(UE4Bone).head
 			#select metarig
 			bpy.ops.object.mode_set(mode='OBJECT')
 			bpy.ops.object.select_all(action='DESELECT')
@@ -445,28 +511,34 @@ def metaBlending2(armature,metarig = None):
 	bpy.ops.object.mode_set(mode='EDIT')
 	#deselect bones (may not matter).
 	bpy.ops.armature.select_all(action='DESELECT')
-	
+
 	for bone in armature.data.edit_bones:
 		#print(bone.name)
-		if armature.data.edit_bones.get(bone.name) is not None:
-			Editbone = armature.data.edit_bones.get(bone.name)
-			boneTail = armature.matrix_world @ Editbone.tail
-			boneHead = armature.matrix_world @ Editbone.head
+		if (Editbone := armature.data.edit_bones.get(bone.name)) is not None:
+			bpy.context.view_layer.update()
+			depsgraph = bpy.context.evaluated_depsgraph_get()
+			true_matrix_world = armature.evaluated_get(depsgraph).matrix_world
+			boneTail = true_matrix_world @ Editbone.tail.copy()
+			boneHead = true_matrix_world @ Editbone.head.copy()
 			boneRoll = Editbone.roll
 			boneParent = Editbone.parent
 			boneParentName = None
 			if boneParent is not None:
 				boneParentName = boneParent.name
 			if metarig.data.edit_bones.get(bone.name) is None:
+				boneName = bone.name
 				#Debug Line - useful to check what's going on.
-				#print(armature.name, "\t",bone.name, " ",Editbone.name, "\t\t",boneParentName, boneTail, boneHead, boneRoll)
-                #create it.
-				newbone = metarig.data.edit_bones.new(bone.name)
+				#print(armature.name, "\t",boneName, " ",Editbone.name, "\t\t",boneParentName, boneTail, boneHead, boneRoll)
+				#create it.
+				newbone = metarig.data.edit_bones.new(boneName)
 				if boneParentName is not None:
 					newbone.parent = metarig.data.edit_bones.get(boneParentName)
 				newbone.use_connect = False
-				newbone.tail = metarig.matrix_world @ boneTail
-				newbone.head = metarig.matrix_world @ boneHead
+				bpy.context.view_layer.update()
+				depsgraph = bpy.context.evaluated_depsgraph_get()
+				true_matrix_world = metarig.evaluated_get(depsgraph).matrix_world
+				newbone.tail = true_matrix_world @ boneTail
+				newbone.head = true_matrix_world @ boneHead
 				newbone.roll = boneRoll
 	#Adjust position of the relative parent bone. need to work out a list...
 	for index, armatureBone in enumerate(armatureBones):
@@ -492,12 +564,15 @@ def metaBlending2(armature,metarig = None):
 			toebone.tail = tmp
 			#print(toebone.name, toebone.head, toebone.tail)
     #correct heel controls
-	for index, MetaBone in enumerate(follow_parent):    
+	for index, MetaBone in enumerate(follow_parent):
 		#select armature
 		if metarig.data.edit_bones.get(MetaBone) is not None:
 			MetaBone = metarig.data.edit_bones.get(MetaBone)
 			if MetaBone.parent is not None:
-				tmp = metarig.matrix_world @ MetaBone.parent.head
+				bpy.context.view_layer.update()
+				depsgraph = bpy.context.evaluated_depsgraph_get()
+				true_matrix_world = metarig.evaluated_get(depsgraph).matrix_world
+				tmp = true_matrix_world @ MetaBone.parent.head
 				length = MetaBone.length / 2
 				if tmp.x > 0:
 					tail = mathutils.Vector( (tmp.x + length, tmp.y, 0) )
@@ -516,9 +591,13 @@ def metaBlending2(armature,metarig = None):
 	BoneB = metarig.data.edit_bones.get("neck_01").head
 	Spot = BoneB + BoneA
 	Spot = Spot / 2
-	metarig.data.edit_bones.get("spine.004").head = metarig.matrix_world @ Spot
-	metarig.data.edit_bones.get("spine.003").tail = metarig.matrix_world @ Spot
+	bpy.context.view_layer.update()
+	depsgraph = bpy.context.evaluated_depsgraph_get()
+	true_matrix_world = metarig.evaluated_get(depsgraph).matrix_world
+	metarig.data.edit_bones.get("spine.004").head = true_matrix_world @ Spot
+	metarig.data.edit_bones.get("spine.003").tail = true_matrix_world @ Spot
 	bpy.ops.object.mode_set(mode='OBJECT')
+	bpy.context.view_layer.update()
 	#Everything else should be ready. Adjust the face.
 	bpy.context.view_layer.objects.active = metarig
 	bpy.ops.object.mode_set(mode='EDIT')
@@ -534,6 +613,7 @@ def metaBlending2(armature,metarig = None):
 	#find where to go (in line with head bone), we only need Y
 	destination = metarig.data.edit_bones.get("head").head.y - face.parent.tail.y
 	if face.parent.tail.y <= destination:
+		bpy.context.view_layer.update()
 		bpy.ops.transform.transform(mode='TRANSLATION', value=(0, destination, 0, 0))
     # ***************************************#
 	#     Create DoubleHelix System bones    #
@@ -541,15 +621,17 @@ def metaBlending2(armature,metarig = None):
 	for index, MetaBone in enumerate(DoubleHelix):
 		if metarig.data.edit_bones.get(MetaBone) is not None:
 			NewBoneName = MetaBone + "_Follow"
-			MetaBone = metarig.data.edit_bones.get(MetaBone)
 			NewBone = metarig.data.edit_bones.new(NewBoneName)
-			newbone.use_connect = False
+			NewBone.head = (0, 0, 0)
+			NewBone.tail = (0, 0, 1)
+			NewBone.use_connect = False
+			MetaBone = metarig.data.edit_bones.get(MetaBone)
 			NewBone.head = MetaBone.head
 			NewBone.tail = MetaBone.tail
 			NewBone.roll = MetaBone.roll
 			if DoubleHelixParent[index]!="" :
 				NewBone.parent = metarig.data.edit_bones.get(DoubleHelixParent[index])
-				newbone.use_connect = True
+				NewBone.use_connect = True
 	for index, MetaBone in enumerate(DoubleHelixReverseA):
 		if metarig.data.edit_bones.get(MetaBone) is not None:
 			MetaParent = metarig.data.edit_bones.get(DoubleHelixReverseP[index])
@@ -560,11 +642,12 @@ def metaBlending2(armature,metarig = None):
     # ***************************************#
 	#   Create the new Shoulder Twist bones  #
 	# ************************************** #
+	twist_head_pos = metarig.data.edit_bones['upperarm_twist_01_l'].head.copy()
 	newbone = metarig.data.edit_bones.new("upperarm_twist_ctrl_l")
 	newbone.parent = metarig.data.edit_bones["upper_arm.L"]
 	newbone.use_connect = False
 	#Places the bone's head in the correct spot.
-	newbone.head = metarig.data.edit_bones['upperarm_twist_01_l'].head
+	newbone.head = twist_head_pos
 	#sets the tail multiplied out into the far distance
 	newbone.tail = mathutils.Vector((newbone.head[0],  newbone.head[1] * 10, newbone.head[2]))
 	#cuts the bone lenght back to a decent value.
@@ -589,7 +672,7 @@ def metaBlending2(armature,metarig = None):
 	for MetaBoneName in MetarigKnuckleBones:
 		if metarig.pose.bones.get(MetaBoneName) is not None:
 			metarig.pose.bones.get(MetaBoneName)['rigify_type'] = 'limbs.super_finger'
-	#Adjust the legs! foot rotation to non auto.        
+	#Adjust the legs! foot rotation to non auto.
 	metarig.pose.bones.get("thigh.L")['rigify_parameters']['rotation_axis'] = 0
 	metarig.pose.bones.get("thigh.L")['rigify_parameters']['auto_align_extremity'] = 0
 	metarig.pose.bones.get("thigh.R")['rigify_parameters']['rotation_axis'] = 0
@@ -599,15 +682,19 @@ def metaBlending2(armature,metarig = None):
 	# ************************************** #
 	metarig.pose.bones.get("upperarm_twist_ctrl_l")['rigify_type'] = 'basic.super_copy'
 	metarig.pose.bones.get("upperarm_twist_ctrl_r")['rigify_type'] = 'basic.super_copy'
-	for layer in metarig.data.bones['upperarm_twist_ctrl_l'].layers:
-		layer = False
-	for layer in metarig.data.bones.get("upperarm_twist_ctrl_r").layers:
-		layer = False
-	metarig.data.bones.get("upperarm_twist_ctrl_l").layers[7] = True
-	metarig.data.bones.get("upperarm_twist_ctrl_r").layers[10] = True
+	bpy.ops.object.mode_set(mode='OBJECT')
+	bpy.context.view_layer.update()
+	bpy.ops.object.mode_set(mode='POSE')
+	bone_l = metarig.data.bones.get("upperarm_twist_ctrl_l")
+	bone_r = metarig.data.bones.get("upperarm_twist_ctrl_r")
+	for coll in list(bone_l.collections):
+		coll.unassign(bone_l)
+	for coll in list(bone_r.collections):
+		coll.unassign(bone_r)
+	metarig.data.collections[7].assign(bone_l)
+	metarig.data.collections[10].assign(bone_r)
 	#finish out.
 	for ob in bpy.context.scene.collection.children['Collection'].objects: ob.select_set(False)
 	bpy.ops.object.mode_set(mode='OBJECT')
-
 def popup(self, context, txt_Text=""):
 	 self.layout.label(text=txt_Text)
