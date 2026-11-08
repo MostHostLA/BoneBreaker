@@ -673,6 +673,9 @@ def metaBlending2(armature,metarig = None):
 		if metarig.pose.bones.get(MetaBoneName) is not None:
 			metarig.pose.bones.get(MetaBoneName)['rigify_type'] = 'limbs.super_finger'
 	#Adjust the legs! foot rotation to non auto.
+	# 1. Force initialize the missing parameters on both sides (The modern 4.0+ guard)
+	if 'rigify_parameters' not in metarig.pose.bones.get("thigh.L"): metarig.pose.bones.get("thigh.L")['rigify_parameters'] = {}
+	if 'rigify_parameters' not in metarig.pose.bones.get("thigh.R"): metarig.pose.bones.get("thigh.R")['rigify_parameters'] = {}
 	metarig.pose.bones.get("thigh.L")['rigify_parameters']['rotation_axis'] = 0
 	metarig.pose.bones.get("thigh.L")['rigify_parameters']['auto_align_extremity'] = 0
 	metarig.pose.bones.get("thigh.R")['rigify_parameters']['rotation_axis'] = 0
@@ -680,8 +683,8 @@ def metaBlending2(armature,metarig = None):
 	# ***************************************#
 	#   Adjust the new Shoulder Twist bones  #
 	# ************************************** #
-	metarig.pose.bones.get("upperarm_twist_ctrl_l")['rigify_type'] = 'basic.super_copy'
-	metarig.pose.bones.get("upperarm_twist_ctrl_r")['rigify_type'] = 'basic.super_copy'
+	metarig.pose.bones.get("upperarm_twist_ctrl_l").rigify_type = 'basic.super_copy'
+	metarig.pose.bones.get("upperarm_twist_ctrl_r").rigify_type = 'basic.super_copy'
 	bpy.ops.object.mode_set(mode='OBJECT')
 	bpy.context.view_layer.update()
 	bpy.ops.object.mode_set(mode='POSE')

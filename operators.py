@@ -26,7 +26,6 @@ else:
 import bpy
 import bpy.ops
 import bmesh
-import bgl
 import gpu
 import mathutils
 import math
@@ -782,10 +781,10 @@ class BONEBREAKER_OT_clearvertcolor(bpy.types.Operator):
 		ob = bpy.context.active_object
 		my_object = ob.data
 		vert_list = my_object.vertices
-		color_map_collection = my_object.vertex_colors
+		color_map_collection = my_object.color_attributes
 		if len(color_map_collection) == 0:
-			color_map_collection.new()
-		color_map = color_map_collection['Col']
+			color_map_collection.new(name='Col', type='BYTE_COLOR', domain='CORNER')
+		color_map = color_map_collection.get('Col') or color_map_collection[0]
 		i=0
 		for poly in my_object.polygons:
 			for idx in poly.loop_indices:
@@ -809,7 +808,8 @@ class BONEBREAKER_OT_enablenvphysview(bpy.types.Operator):
 	bl_description = "Start line drawing operator"
 	bl_options = {'REGISTER'}
 
-	def __init__(self):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
 		self.draw_handle = None
 		self.draw_event = None
 		self.vertices = []
@@ -920,7 +920,7 @@ class BONEBREAKER_OT_enablenvphysview(bpy.types.Operator):
 				buffer_item = [VertLOC+(bpy.context.view_layer.objects.active.data.vertices[v].normal* scale),color,bpy.context.view_layer.objects.active.data.vertices[v].normal]
 				self.buffer.append(buffer_item)
         #Setup the batch for drawing.
-		self.shader = gpu.shader.from_builtin('3D_FLAT_COLOR')
+		self.shader = gpu.shader.from_builtin('FLAT_COLOR')
 		self.batch = batch_for_shader(self.shader, 'LINES', {"pos": self.vertices, "color": self.vertex_colors})
 
 	def draw_callback(self, op, context):
@@ -968,10 +968,17 @@ class BONEBREAKER_OT_enablenvphysview(bpy.types.Operator):
 		scene = context.scene
 		region = context.region
 		rv3d = context.region_data
+		if region is None or rv3d is None:
+			for area in context.screen.areas:
+				if area.type == 'VIEW_3D':
+					region = next((r for r in area.regions if r.type == 'WINDOW'), None)
+					rv3d = area.spaces.active.region_3d
+					break
 		coord = event.mouse_region_x, event.mouse_region_y
         # standard info for ray
-		view_vector = view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
-		ray_origin = view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
+		if region and rv3d:
+			view_vector = view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
+			ray_origin = view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
         #Base self contained functions used in the script below.
 		def getObj():
 			yield (bpy.context.view_layer.objects.active, bpy.context.view_layer.objects.active.matrix_world)
