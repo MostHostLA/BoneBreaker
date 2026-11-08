@@ -14,7 +14,7 @@
 # help users who are creating or modifying their own custom Rig. this process works with any type of #
 # skeleton, you just need to work some magic to get the bones to match up in 3d space...             #
 #                                                                                                    #
-# This version for blender 2.82 support animation importing/authoring -- the best possible with the  #
+# This version for blender 5.2  support animation importing/authoring -- the best possible with the  #
 # current rigify stretch/rotate issues                                                               #
 #                                                                                 (2K screens rulke) #
 ######################################################################################################

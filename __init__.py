@@ -14,7 +14,7 @@
 # help users who are creating or modifying their own custom Rig. this process works with any type of #
 # skeleton, you just need to work some magic to get the bones to match up in 3d space...             #
 #                                                                                                    #
-# This version for blender 2.82 support animation importing/authoring -- the best possible with the  #
+# This version for blender 5.2  support animation importing/authoring -- the best possible with the  #
 # current rigify stretch/rotate issues                                                               #
 #                                                                                 (2K screens rulke) #
 ######################################################################################################
@@ -22,8 +22,8 @@ bl_info = {
 	"name": "BoneBreaker",
 	"description": "Automagical rigify for Unreal Engine 4 Mannequin",
 	"author": "Andy Fattoracci @ MostHostLA.com",
-	"version": (3, 5, 0),
-	"blender": (2, 80, 0),
+	"version": (4, 2, 0),
+	"blender": (5, 2, 0),
 	"location": "Armature properties, Bone properties, View3d tools panel, Armature Add menu",
 	"warning": "", # used for warning icon and text in addons panel
 	"tracker_url": "http://mosthostla.com/gamedev/contact/",

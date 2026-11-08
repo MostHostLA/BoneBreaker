@@ -14,7 +14,7 @@
 # help users who are creating or modifying their own custom Rig. this process works with any type of #
 # skeleton, you just need to work some magic to get the bones to match up in 3d space...             #
 #                                                                                                    #
-# This version for blender 2.82 support animation importing/authoring -- the best possible with the  #
+# This version for blender 5.2  support animation importing/authoring -- the best possible with the  #
 # current rigify stretch/rotate issues                                                               #
 #                                                                                 (2K screens rulke) #
 ######################################################################################################
@@ -37,7 +37,7 @@ if bpy.app.version < (2,80,0):
 	Region = "TOOLS"
 else:
 	Region = "UI"
-    
+
 def create_properties():
     bpy.types.Object.BoneBreaker_vertexlen = bpy.props.IntProperty(name="lenght", description="Multiplier of the cloth distance in cm.", default=100, min=0, max=1000, soft_min=0, soft_max=1000)
     #bpy.types.Object.vertexlen=100
@@ -46,7 +46,7 @@ def create_properties():
 def remove_properties():
     del(bpy.types.Object.BoneBreaker_vertexlen)
     del(bpy.types.Object.BoneBreaker_modal_status)
-    
+
 class BoneBreaker_Import(bpy.types.Panel):
 	"""Creates the addon's Import panel """
 	bl_idname = "BONEBREAKER_PT_import"
@@ -67,7 +67,7 @@ class BoneBreaker_Import(bpy.types.Panel):
 			row.operator("bonebreaker.fbximportue4", text="UE4", icon='KEYTYPE_JITTER_VEC')
 		else:
 			row.operator("bonebreaker.addfeature", text="UE4", icon='KEYTYPE_JITTER_VEC')
-		
+
 class BoneBreaker_Metarig(bpy.types.Panel):
 	"""Creates the addon's Metarig Control panel """
 	bl_idname = "BONEBREAKER_PT_metarig"
@@ -108,7 +108,7 @@ class BoneBreaker_Actions(bpy.types.Panel):
 		row.operator("bonebreaker.followfbx", text="UE4", icon='POSE_HLT')
 		row.operator("bonebreaker.follownone", text="No", icon='SNAP_OFF')
 		row.operator("bonebreaker.followrig", text="My", icon='OUTLINER_DATA_ARMATURE')
-		
+
 class BoneBreaker_Animations(bpy.types.Panel):
 	"""Creates the addon's Animation panel """
 	bl_idname = "BONEBREAKER_PT_animations"
@@ -135,14 +135,14 @@ class BoneBreaker_Animations(bpy.types.Panel):
 		col.label(text="Keyframe")
 		col.operator("bonebreaker.addkeyframe", text="Add", icon='ZOOM_IN')
 		col.operator("bonebreaker.clearkeyframe", text="Remove", icon='ZOOM_OUT')
-		
+
 		#split = layout.split()
 		#col = split.column()
 		#col.operator("bonebreaker.addallselected", text="Add All", icon='REC')
 		#col = split.column(align=True)
 		row = layout.column()
 		row.operator("bonebreaker.clearallselected", text="Remove All Selected", icon='LIBRARY_DATA_BROKEN')
-		
+
 class BoneBreaker_NVCloth(bpy.types.Panel):
 	"""Creates the addon's NvCloth panel """
 	bl_idname = "BONEBREAKER_PT_nvcloth"
@@ -159,7 +159,7 @@ class BoneBreaker_NVCloth(bpy.types.Panel):
 		if obj:
 			row.operator("bonebreaker.clearvertcolor", text="Remove Color", icon='CANCEL')
 			row.prop(obj, "BoneBreaker_vertexlen", text="Distance", icon="PHYSICS")
-        
+
 		if (bpy.types.Object.BoneBreaker_modal_status==0):
 			custom_text = "Enable View"
 		else :
@@ -182,7 +182,7 @@ class BoneBreaker_Export(bpy.types.Panel):
 		layout = self.layout
 		row = layout.column()
 		#Buttons
-				
+
 		row.label(text="FPS Rate:")
 		row = layout.split()
 		row.prop(scene.render, "fps")
@@ -191,7 +191,7 @@ class BoneBreaker_Export(bpy.types.Panel):
 		row.label(text="Export File:")
 		row = layout.row(align=True)
 		row.operator('bonebreaker.exportmannequin', text="Rig", icon='MOD_ARMATURE')
-		row.operator('bonebreaker.fbxexport', text="FBX", icon='FILE_3D').type="OFF" 
+		row.operator('bonebreaker.fbxexport', text="FBX", icon='FILE_3D').type="OFF"
 		row = layout.row(align=True)
 		row.operator('bonebreaker.fbxexport', text="Edges", icon='MOD_EDGESPLIT').type="EDGE"
 		row.operator('bonebreaker.fbxexport', text="Faces", icon='MOD_OPACITY').type="FACE"
